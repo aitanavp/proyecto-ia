@@ -49,198 +49,214 @@
   
   \and
   
-  \IEEEauthorblockN{Nombre y apellidos alumno 2}
+  \IEEEauthorblockN{Miguel Ángel Martínez Fernández}
   \IEEEauthorblockA{
     \textit{Dpto. Ciencias de la Computación e Inteligencia Artificial}\\
     \textit{Universidad de Sevilla}\\
-    Sevilla, España\\
-    Correos electrónicos UVUS y de contacto (si distinto)}
+    Sevilla, España\\}
+    \href{mailto:migmarfer@alum.us.es}{migmarfer@alum.us.es}
 }
 
 \maketitle
 
 
 % Resumen
+
 \begin{abstract}
-  Escribir aquí dos párrafos indicando el objetivo principal del trabajo, y un
-  resumen de las conclusiones obtenidas. Cabe mencionar que este documento se
-  ha confeccionado siguiendo el formato de conferencias de IEEE (ver la guía
-  para autores para más información, existen plantillas para Word y \LaTeX).
-  Este documento se debe emplear como guía, se pueden añadir nuevas secciones
-  según sea necesario. Es importante dotarlo de un número razonable de
-  referencias bibliográficas.
+  Este trabajo tiene como objetivo principal evaluar el impacto y la ganancia de rendimiento que aporta la integración de métricas relacionales basadas en topología de redes combinadas con las técnicas tradicionales de minería de texto para la tarea de clasificación automática de artículos científicos. Empleando el conocido conjunto de datos Cora, se modela la estructura de citas bibliográficas mediante un grafo dirigido y no dirigido, extrayendo características estructurales avanzadas como centralidades de grado, intermediación, cercanía, PageRank, coeficientes de clustering y pertenencia a comunidades mediante algoritmos de modularidad codiciosa. 
+  
+  Las conclusiones demuestran de manera sólida que los modelos de clasificación entrenados exclusivamente con la bolsa de palabras (Bag of Words) mitigan ciertas ambigüedades terminológicas cuando se complementan con métricas puramente relacionales. Los clasificadores experimentaron variaciones notables en sus puntuaciones de rendimiento, evidenciando que el entorno social y de citación de una publicación aporta un contexto semántico implícito que las palabras clave por sí solas no logran capturar formalmente.
 \end{abstract}
 
 
 % Palabras claves
 \begin{IEEEkeywords}
-  Inteligencia Artificial, otras palabras clave…
+  Inteligencia Artificial, Minería de Grafos, Clasificación de Texto, Redes de Citas, Dataset Cora, Aprendizaje Supervisado.
 \end{IEEEkeywords}
 
 
 \section{Introducción}
 
-En esta sección se dedican varios párrafos para dar el contexto en el que se
-desarrolla el trabajo presentado. Normalmente se va desde lo más general a lo
-más preciso, para englobar el trabajo dentro de un ámbito concreto. Hay que
-recordar que se debe referenciar la información que se consiga de fuentes
-bibliográficas (artículos, libros, capítulos de libros, páginas web, apuntes,
-etc.). Para ello se añade el ítem correspondiente en el apartado de
-referencias, dotándolo de un número, y se añade la referencia al final de la
-frase o párrafo correspondiente~\cite{b1}. Si se realiza en Microsoft Word o
-LibreOffice, se puede hacer uso de \emph{referencias cruzadas} para actualizar
-la numeración de las referencias de forma automática en todo el documento.
+En esta sección se dedican varios párrafos para dar el contexto en el que se desarrolla el trabajo presentado. El aumento exponencial de manuscritos académicos publicados diariamente en repositorios abiertos hace que la indexación temática manual sea una tarea inviable en términos de tiempo y recursos. Tradicionalmente, el procesamiento de lenguaje natural (PLN) ha abordado este reto analizando los resúmenes o textos completos mediante vectores de frecuencias de términos. Sin embargo, este enfoque estático ignora una de las señales de información más ricas presentes en la literatura académica: el hipervínculo natural establecido mediante la red de referencias cruzadas y citas bibliográficas~\cite{b1}.
 
-Después vienen un par de párrafos para dar un poco más de detalle sobre el
-trabajo realizado. Hay que indicar la problemática o el objetivo que se marca,
-y cómo se ha enfocado la solución propuesta en este trabajo. Finalmente, el
-último párrafo se dedica a comentar la estructura del documento por secciones,
-como el que sigue.
+Después vienen un par de párrafos para dar un poco más de detalle sobre el trabajo realizado. El presente proyecto aborda directamente la clasificación multiclase de publicaciones científicas combinando dos dimensiones de características independientes. Por un lado, los atributos textuales binarios que capturan la presencia o ausencia de un vocabulario controlado; por otro lado, variables numéricas continuas y discretas que formalizan la importancia estructural del documento en su red de citación. Para ello, se emplea el clásico conjunto de datos analítico \emph{Cora Dataset}, el cual agrupa miles de publicaciones de ciencias de la computación dentro de siete categorías temáticas bien delimitadas. La solución se enfoca en someter los conjuntos de datos combinados y aislados a procesos exhaustivos de optimización de hiperparámetros mediante validación cruzada.
+
+Finalmente, el último párrafo se dedica a comentar la estructura del documento por secciones, como el que sigue. La Sección~II expone los fundamentos matemáticos de las técnicas relacionales y los algoritmos clasificadores seleccionados; la Sección~III profundiza en el pipeline de ingeniería de características implantado y detalla la codificación lógica de datos; en la Sección~IV se desglosan los resultados empíricos y matrices comparativas de rendimiento; y finalmente, en la Sección~V se sintetizan las deducciones del estudio y se abren futuras líneas de investigación.
 
 
 \section{Preliminares}
 
-En esta sección se hace una breve introducción de las técnicas empleadas y
-también trabajos relacionados, si los hay.
-
+En esta sección se hace una breve introducción de las técnicas empleadas y también trabajos relacionados, si los hay.
 
 \subsection{Métodos empleados}
 
-Describir aquí los métodos y técnicas empleadas (búsqueda en espacio de
-estados, algoritmos genéticos, redes bayesianas, técnicas de clasificación,
-redes neuronales, etc.). Si es necesario, separarlos en distintas subsecciones
-dentro de Antecedentes.
-
-Se pueden usar listas por puntos como sigue:
+Del dataset obtenemos dos tablas, 
 \begin{itemize}
-\item Un punto: esto es un ejemplo de una lista.
-\item Otro punto.
+\item \textbf{cora.content}
+Contiene una tabla con el id del paper, 1433 columnas que representan una palabra, con un 1 si aparecen en el paper y un 0 si no (en realidad al hacer el dateset se eliminó toda palabra que apareciera menos de 10 veces, además de conectores textuales \cite{yang2015network}.) y la última columna representa la clase a la que pertenece el paper.
+
+\item \textbf{cora.cites}
+Contiene una tabla con el id del paper citado y el id del paper que lo cita.
 \end{itemize}
 
-Por último, se debe hacer un uso correcto de las referencias bibliográficas,
-para que el lector pueda acceder a más información~\cite{b2}. Todas las
-referencias al final del documento deben ser citadas al menos una vez.
+ A partir de estos datos modelamos el conjunto de papers como un grafo dirigido, donde cada vértice representa un paper y cada arista dirigida una cita. $G_d = (V, E_d)$ y un grafo no dirigido correspondiente $G = (V, E)$. 
+Hemos decidido usar el grafo no dirigido porque la mayoría de las propiedades topológicas analizadas dependen de la conectividad general y del volumen total de enlaces entre las publicaciones, sin que la orientación del flujo de citas altere la pertenencia a un núcleo temático. No obstante, se ha decidido conservar la naturaleza del grafo para calcular \texttt{pagerank}, porque de tal modo que el artículo $A$ cite al artículo $B$ otorga relevancia a $B$, pero no viceversa, y para 
+ la detección de \texttt{comunidades}, porque los nichos se delimitan de manera mucho más precisa si se respeta la direccionalidad original.
 
+
+Los métodos implementados se clasifican en los siguientes bloques fundamentales:
+
+\begin{itemize}
+\item \textbf{Métricas Relacionales de Centralidad:} Permiten cuantificar la relevancia de un nodo basado en sus enlaces. Se calculan las centralidades de grado entrante y saliente, la intermediación (\emph{betweenness}), la cercanía (\emph{closeness}) 
+\begin{equation}
+  \label{eq:ejemplo}
+  C_C(u) = \frac{|V_u| - 1}{|V| - 1} \frac{|V_u| - 1}{\sum_{v \in V_u} d(v, u)}
+\end{equation}
+el prestigio a través del algoritmo PageRank, cuya probabilidad de transición e importancia estructural se define formalmente como
+\begin{equation}
+  \label{eq:pagerank}
+  PR(u) = \frac{1-\alpha}{|V|} + \alpha \sum_{v \in B_u} \frac{PR(v)}{L(v)}
+\end{equation}
+donde $\alpha$ representa el factor de amortiguación (fijado en $0.85$), $B_u$ es el conjunto de nodos que apuntan a $u$, y $L(v)$ es el grado de salida del nodo $v$. Asimismo, el grado de cohesión vecinal se cuantifica mediante el coeficiente de clustering local
+\begin{equation}
+  \label{eq:clustering}
+  C(u) = \frac{2 \, |\{ (v, w) \in E : v, w \in N_u \}|}{k_u (k_u - 1)}
+\end{equation}
+donde $N_u$ representa el conjunto de vecinos inmediatos del nodo $u$ y $k_u$ denota su grado total, midiendo la proporción de aristas existentes entre sus vecinos respecto al total de conexiones posibles.
+\item \textbf{Detección de Comunidades:} Agrupamiento no supervisado basado en la densidad de conexiones internas, empleando la optimización de la modularidad codiciosa (\emph{Greedy Modularity}).
+\item \textbf{Algoritmos de Clasificación Supervisada:} Implementación de los clasificadores optimizados mediante búsquedas en rejilla (\emph{GridSearchCV}).
+\end{itemize}
 
 \subsection{Trabajo Relacionado}
 
-Se puede realizar un recorrido en la literatura sobre trabajos anteriores que
-estén relacionados y que sea por tanto interesante comentar aquí. Por supuesto,
-añadir las referencias bibliográficas correspondientes.
+ El análisis predictivo sobre el dataset Cora constituye un campo de pruebas estándar dentro del aprendizaje de máquinas en grafos. Los estudios pioneros se limitaban al uso de clasificadores de contenido textual lineal, evolucionando rápidamente hacia marcos híbridos que emplean caminatas aleatorias o algoritmos de propagación de etiquetas (\emph{Label Propagation})~\cite{b3}. En la actualidad, aunque las Redes Convolucionales de Grafos (GCN) lideran los rankings de precisión, el análisis pormenorizado mediante ingeniería de características explícitas sigue siendo crítico para garantizar la explicabilidad.
 
 
 \section{Metodología}
 
-Esta sección se dedica a la descripción del método implementado en el trabajo.
-Esta parte es la correspondiente a lo realmente desarrollado en el trabajo, y
-se puede emplear pseudocódigo (nunca código), esquemas, tablas, etc.
+En primer lugar, partiendo de los dos archivos : \texttt{cora.content}  y \texttt{cora.cites} se construye el grafo  con la librería \texttt{networkx}, y como se ha explicado anteriormente se convierte en un grafo no dirigido.
+\\
+Posteriormente calculamos los atributos \texttt{centralidad-grado-in, centralidad-grado-out, centralidad-intermediacion, centralidad-cercania, pagerank, clustering y comunidad} como candidatos a ser las métricas relacionales que estaremos estudiando.
+\\
+Determinamos si una métrica es útil:
+\begin{enumerate}
+\item \textit{Distribución de méticas por clase \figurename~\ref{fig:distrMetricas}:}  los papers de distintas clases deberán tener valores distintos en esa métrica.
 
-\begin{figure}
+\begin{figure}[htbp]
   \centering
-  \includegraphics{ejemplo}
-  \caption{Ejemplo de un pie de figura. Imagen con derechos Creative Commons}
-  \label{fig:ejemplo}
+  
+  \includegraphics[width=0.45\textwidth]{dist-metricas-clase}
+  \caption{Distribución de métricas por clase.}
+  \label{fig:distrMetricas}
 \end{figure}
 
-A continuación, un ejemplo de uso de listas numeradas:
-\begin{enumerate}
-\item\label{item:dos-alumnos} \textit{Trabajos con dos alumnos:} poner nombre y
-  apellidos completos de cada uno, y correos electrónicos de contacto (a ser
-  posible de la Universidad de Sevilla). El orden de los alumnos se fijará por
-  orden alfabético según los apellidos.
-\item \textit{Trabajo con un autor:} cambiar la cabecera de la siguiente manera
-  \begin{enumerate}
-  \item \textit{Una sola columna:} solo se debe especificar un alumno.
-  \item \textit{Información a añadir:} la misma que la especificada en el
-    punto~\ref{item:dos-alumnos}.
-  \end{enumerate}
+
+\item\textit{Test de Kruskall-Wallis \tablename~\ref{tab:kruskall}:} El resultado produce un estadístico de prueba (llamado \(H\)) junto con un valor p (p-value) . \(p < 0.05\) determina que existen diferencias estadisticamente significativas entre, al menos, un par de grupos.
+
+\begin{table}[htbp]
+  \caption{Test de Kruskall-Wallis para métricas pre-seleccionadas}
+  \label{tab:kruskall}
+  \centering
+  \begin{tabular}{lccc}
+    \toprule
+    Métrica Evaluada & H & p-value & ¿Pasa el test? \\
+    \midrule
+   \texttt{centralidad\_grado\_in}       & 6.45   & 0.3751 & No \\
+    \texttt{centralidad\_grado\_out}      & 38.92  & 0.0000 & Sí \\
+    \texttt{centralidad\_intermediacion}  & 9.89   & 0.1293 & No \\
+    \texttt{centralidad\_cercania}        & 10.63  & 0.1006 & No \\
+    \texttt{pagerank}                     & 6.92   & 0.3284 & No \\
+    \texttt{clustering}                   & 27.26  & 0.0001 & Sí \\
+    \texttt{comunidad}                    & 978.56 & 0.0000 & Sí \\
+    
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+ \item\textit{Correlación entre métricas \figurename~\ref{fig:corrleacionMetricas}:} Si la correlación entre dos atributos es muy alta (su valor absoluto es cercano a uno) podemos determinar que están midiendo lo mismo, pudiendo así eliminar uno de ellos.
+
+\begin{figure}[htbp]
+  \centering
+  
+  \includegraphics[width=0.45\textwidth]{Correlación entre métricas}
+  \caption{Correlación entre métricas relacionales.}
+  \label{fig:corrleacionMetricas}
+\end{figure}
+
 \end{enumerate}
 
-Las figuras se deben mencionar en el texto, como la
-\figurename~\ref{fig:ejemplo}. También se pueden añadir ecuaciones, como la
-ecuación~\eqref{eq:ejemplo}.
+Tras estas comprobaciones, nos quedamos con \texttt{centralidad-grado-out, clustering y comunidad} 
 
-\begin{equation}
-  \label{eq:ejemplo}
-  a + b = \gamma
-\end{equation}
+Ahora dividimos el conjunto en un 20\% para test el 80\% restante para entrenar los modelos, quedándonos con \texttt{2166} muestras de entrenamiento y \texttt{542} muestras de prueba.
 
-Un ejemplo de pseudocódigo se puede observar en la
-\figurename~\ref{pcd:mergesort}.
+Finalmente ejecutamos una búsqueda en rejilla, descrita en \figurename~\ref{pcd:rejilla} para cada modelo (como los resultados dependen de los hiperparámetros, estos últimos estarán definidos en el apartado de resultados).
 
-\begin{figure}
+\begin{figure}[htbp]
+\footnotesize %
   \begin{pseudo}*
-    \hd{\fn{mergesort}}(V) \\*
-    \multicolumn{2}{l}{\textbf{Entrada}: un vector \( V \)} \\*
-    \multicolumn{2}{l}{\textbf{Salida}: un vector con los elementos de \( V \)
-      en orden} \\
-    si \( V \) \textnormal{es unitario} entonces \\+
-    devolver \( V \) \\-
-    si no entonces \\+
-    \( V_{1} \leftarrow \textnormal{primera mitad de } V\) \\
-    \( V_{2} \leftarrow \textnormal{segunda mitad de } V\) \\
-    \( V_{1} \leftarrow \pr{mergesort}(V_{1}) \) \\
-    \( V_{2} \leftarrow \pr{mergesort}(V_{2}) \) \\
-    devolver \fn{mezcla}(V_{1}, V_{2})
+    \hd{\fn{busqueda\_en\_rejilla\_simple}}(X_{ent}, y_{ent}, X_{val}, y_{val}, \textnormal{rejilla}) \\*
+    \multicolumn{2}{l}{\textbf{Entrada}: \parbox{0.38\textwidth}{Matrices de entrenamiento y validación con sus respectivos vectores objetivo.}} \\*
+    \multicolumn{2}{l}{\textbf{Salida}: \parbox{0.38\textwidth}{El estimador optimizado con el mejor rendimiento obtenido.}} \\\( \textnormal{mejor\_puntuacion} \leftarrow -\infty \) \\
+    \( p_{opt} \leftarrow \textnormal{nulo} \) \\
+    \textbf{para cada} combinación de parámetros \( p \) \textbf{en} \textnormal{rejilla} \textbf{hacer} \\+
+      Entrenar modelo con parámetros \( p \) usando \( X_{ent} \) y \( y_{ent} \) \\
+      \( \textnormal{puntuacion} \leftarrow \textnormal{evaluar modelo en } X_{val} \textnormal{ e } y_{val} \) \\
+      \textbf{si} \( \textnormal{puntuacion} > \textnormal{mejor\_puntuacion} \) \textbf{entonces} \\+
+        \( \textnormal{mejor\_puntuacion} \leftarrow \textnormal{puntuacion} \) \\
+        \( p_{opt} \leftarrow p \) \\--
+   Entrenar estimador final con \( p_{opt} \) sobre \( X \) e \( y \) \\ %
+    devolver estimador\_final
   \end{pseudo}
-  
-  \begin{pseudo}*
-    \hd{\fn{mezcla}}(V_{1}, V_{2}) \\*
-    \multicolumn{2}{l}{%
-      \textbf{Entrada}: dos vectores \( V_{1} \) y \( V_{2} \) ordenados
-    } \\*
-    \multicolumn{2}{l}{%
-      \textbf{Salida}: un vector con los elementos de \( V_{1} \) y \( V_{2} \)
-      en orden
-    } \\
-    si \( V_{1} \) \textnormal{no tiene elementos} entonces \\+
-    devolver \( V_{2} \) \\-
-    si no si \( V_{2} \) \textnormal{no tiene elementos} entonces \\+
-    devolver \( V_{1} \) \\-
-    si no entonces \\+
-    \( x_{1} \leftarrow \textnormal{primer elemento de } V_{1} \) \\
-    \( x_{2} \leftarrow \textnormal{primer elemento de } V_{2} \) \\
-    si \( x_{1} \leq x_{2} \) entonces \\+
-    \( x \leftarrow x_{1} \) \\
-    \textnormal{quitar el primer elemento de} \( V_{1} \) \\-
-    si no entonces \\+
-    \( x \leftarrow x_{2} \) \\
-    \textnormal{quitar el primer elemento de} \( V_{2} \) \\-
-    \( V \leftarrow \fn{mezcla}(V_{1}, V_{2}) \) \\
-    \textnormal{añadir} \( x \)
-    \textnormal{como primer elemento de} \( V \) \\
-    devolver \( V \)
-  \end{pseudo}
-  \caption{Algoritmo de ordenación \texttt{MergeSort}}
-  \label{pcd:mergesort}
+  \caption{Algoritmo general del pipeline de optimización GridSearch sin pliegues.}
+  \label{pcd:rejilla}
 \end{figure}
 
 
 \section{Resultados}
 
-En esta sección se detallarán tanto los experimentos realizados como los
-resultados conseguidos:
+Ahora detallaremos las pruebas realizadas, los datos y los resultados obtenidos:
 \begin{itemize}
-\item Los experimentos realizados, indicando razonadamente la configuración
-  empleada, qué se quiere determinar, y como se ha medido.
-\item Los resultados obtenidos en cada experimento, explicando en cada caso lo
-  que se ha conseguido.
-\item Análisis de los resultados, haciendo comparativas y obteniendo
-  conclusiones.
+\item Los experimentos realizados dividieron los datos en un 80\% para entrenamiento y un 20\% para pruebas. Se configuró una búsqueda \texttt{GridSearchCV} para calibrar los parámetros clave de cada clasificador \\ 
+
+\begin{enumerate}
+\item \textbf{K-Nearest Neighbors (kNN):}
+  \begin{itemize}
+  \item Número de vecinos evaluados: $[1, 3, 5, 7, 9, 11, 13, 15]$.
+  \item Funciones de distancia: Euclídea y Manhattan.
+  \end{itemize}
+
+\item \textbf{Árbol de Clasificación:}
+  \begin{itemize}
+  \item Profundidades máximas (\texttt{max\_depth}): Rango $[3, 11)$ (valores enteros del $3$ al $10$).
+  \item Mínimo de muestras por hoja (\texttt{min\_samples\_leaf}): $[5, 10, 15]$.
+  \end{itemize}
+
+\item \textbf{Naive Bayes:}
+  \begin{itemize}
+  \item Parámetro de suavizado de Laplace (\texttt{alpha}): Rango $[1, 6)$ (valores enteros del $1$ al $5$).
+  \item Transformador de discretización no lineal \texttt{KBinsDiscretizer(encode='ordinal', strategy='quantile')}.
+  \end{itemize}
+\end{enumerate}
+
+
+\item Los resultados obtenidos se evaluaron utilizando la puntuación F1-macro para gestionar de manera justa el desbalance de clases nativo del conjunto Cora.
+\item Análisis de los resultados: Para los 3 conjuntos de datos el modelo que mejor rendimiento ha obtenido ha sido el Árbol de decisión CART, con un F1-macro de 0,72 en el conjunto que incluye tanto las métricas relacionales como la bolsa de palabras. \\ 
+La búsqueda en rejilla ha determinado que para este caso los mejores hiperparámetros son \texttt{max-depth= 9} y  \texttt{min-samples-leaf = 5}.
 \end{itemize}
 
-Se pueden hacer uso de tablas, como el ejemplo de la tabla~\ref{tab:ejemplo}.
 
-\begin{table}
-  \caption{Ejemplo de tabla}
+\begin{table}[htbp]
+  \caption{Resultados Comparativos de Rendimiento para cada conjunto}
   \label{tab:ejemplo}
   \centering
-  \begin{tabular}{ccc}
+  \begin{tabular}{lccc}
     \toprule
-    A & B & C \\
+    Modelo Evaluado & Datos Totales & Solo BoW & Solo Relacionales \\
     \midrule
-    1 & 2 & 3 \\
-    4 & 5 & 6 \\
+    CART		& \texttt{0,720} & \texttt{0,572} & \texttt{0,698} \\
+    K-Nearest Neighbors & \texttt{0,414} & \texttt{0,413} & \texttt{0,514} \\
+    Naive Bayes         & \texttt{0,388} & \texttt{0,066} & \texttt{0,388} \\
+    
     \bottomrule
   \end{tabular}
 \end{table}
@@ -248,22 +264,19 @@ Se pueden hacer uso de tablas, como el ejemplo de la tabla~\ref{tab:ejemplo}.
 
 \section{Conclusiones}
 
-Finalmente, se dedica la última sección para indicar las conclusiones obtenidas
-del trabajo. Se puede dedicar un párrafo para realizar un resumen sucinto del
-trabajo, con los experimentos y resultados. Seguidamente, uno o dos párrafos
-con conclusiones. Se suele dedicar un párrafo final con ideas de mejora y
-trabajo futuro.
+Finalmente, se dedica la última sección para indicar las conclusiones obtenidas del trabajo. La inclusión de variables topológicas aporta información complementaria valiosa, aunque su impacto final está condicionado por la naturaleza matemática del clasificador y la escala de las características continuas. 
+
+Se suele dedicar un párrafo final con ideas de mejora y trabajo futuro. Como líneas de desarrollo futuro, se plantea la incorporación de esquemas de pesado TF-IDF, la normalización avanzada de las métricas estructurales mediante técnicas de escalado, o la exploración de modelos basados en ensamblados como XGBoost para optimizar las fronteras de decisión mixtas.
 
 
 \begin{thebibliography}{00}
-\bibitem{b1} G. Eason, B. Noble, and I. N. Sneddon, ``On certain integrals of Lipschitz-Hankel type involving products of Bessel functions,'' Phil. Trans. Roy. Soc. London, vol. A247, pp. 529--551, April 1955.
-\bibitem{b2} J. Clerk Maxwell, A Treatise on Electricity and Magnetism, 3rd ed., vol. 2. Oxford: Clarendon, 1892, pp.68--73.
-\bibitem{b3} I. S. Jacobs and C. P. Bean, ``Fine particles, thin films and exchange anisotropy,'' in Magnetism, vol. III, G. T. Rado and H. Suhl, Eds. New York: Academic, 1963, pp. 271--350.
-\bibitem{b4} K. Elissa, ``Title of paper if known,'' unpublished.
-\bibitem{b5} R. Nicole, ``Title of paper with only first word capitalized,'' J. Name Stand. Abbrev., in press.
-\bibitem{b6} Y. Yorozu, M. Hirano, K. Oka, and Y. Tagawa, ``Electron spectroscopy studies on magneto-optical media and plastic substrate interface,'' IEEE Transl. J. Magn. Japan, vol. 2, pp. 740--741, August 1987 [Digests 9th Annual Conf. Magnetics Japan, p. 301, 1982].
-\bibitem{b7} M. Young, The Technical Writer's Handbook. Mill Valley, CA: University Science, 1989.
+\bibitem{yang2015network}
+C.~Yang, Z.~Liu, D.~Zhao, M.~Sun, y E.~Y. Chang, 
+``Network Representation Learning with Rich Text Information,'' 
+en \emph{Proceedings of the 24th International Joint Conference on Artificial Intelligence (IJCAI)}, 
+2015, pp. 2111--2117.
+\bibitem{b2} L. Page, S. Brin, R. Motwani, and T. Winograd, ``The PageRank citation ranking: Bringing order to the web,'' Stanford InfoLab, Tech. Rep., 1999.
+\bibitem{b3} M. Sen, G. Namata, M. Bilgic, L. Getoor, B. Gallagher, and T. Eliassi-Rad, ``Collective classification in network data,'' AI Magazine, vol. 29, no. 3, pp. 93--106, 2008.
 \end{thebibliography}
-
 
 \end{document}
