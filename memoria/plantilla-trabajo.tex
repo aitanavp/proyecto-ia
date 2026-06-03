@@ -18,6 +18,12 @@
 % Hipervínculos en el documento
 \usepackage{hyperref}
 
+% Manejo de tablas con celdas que abarcan varias filas
+\usepackage{multirow}
+
+% Flujos de trabajo y diagramas
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows}
 
 % Macros traducidas
 \def\contentsname{Índice general}
@@ -37,7 +43,7 @@
 
 \begin{document}
 
-\title{Título del trabajo (elegir uno original)}
+\title{Clasificación temática de artículos científicos mediante análisis relacional}
 
 \author{
   \IEEEauthorblockN{Aitana Valera Prados}
@@ -63,98 +69,371 @@
 % Resumen
 
 \begin{abstract}
-  Este trabajo tiene como objetivo principal evaluar el impacto y la ganancia de rendimiento que aporta la integración de métricas relacionales basadas en topología de redes combinadas con las técnicas tradicionales de minería de texto para la tarea de clasificación automática de artículos científicos. Empleando el conocido conjunto de datos Cora, se modela la estructura de citas bibliográficas mediante un grafo dirigido y no dirigido, extrayendo características estructurales avanzadas como centralidades de grado, intermediación, cercanía, PageRank, coeficientes de clustering y pertenencia a comunidades mediante algoritmos de modularidad codiciosa. 
+  Este trabajo tiene como objetivo principal evaluar el impacto y la ganancia de rendimiento que aporta la integración de métricas relacionales basadas en topología de 
+  redes combinadas con las técnicas tradicionales de procesamiento de texto para la tarea de clasificación automática de artículos científicos. Se ha empleado el 
+  conjunto de datos \emph{Cora}, que fue construido a partir de un sistema de búsqueda de papers científicos que, además de facilitar búsquedas por palabras clave, 
+  organiza los artículos en una jerarquía temática de ciencias de la computación y recoge los enlaces de citación entre ellos~\cite{mccallum2024}. 
+  Se ha modelado la estructura de citas bibliográficas mediante un grafo dirigido y no dirigido, extrayendo características estructurales avanzadas como 
+  centralidades de grado, intermediación, cercanía, \emph{PageRank}, coeficientes de \emph{clustering} y pertenencia a comunidades. 
   
-  Las conclusiones demuestran de manera sólida que los modelos de clasificación entrenados exclusivamente con la bolsa de palabras (Bag of Words) mitigan ciertas ambigüedades terminológicas cuando se complementan con métricas puramente relacionales. Los clasificadores experimentaron variaciones notables en sus puntuaciones de rendimiento, evidenciando que el entorno social y de citación de una publicación aporta un contexto semántico implícito que las palabras clave por sí solas no logran capturar formalmente.
+  Los resultados obtenidos muestran que el árbol de decisión es el modelo 
+  con mejor rendimiento en todas las configuraciones evaluadas, especialmente al combinar métricas relacionales con representación 
+  \emph{bag-of-words}. Destaca que el uso exclusivo de métricas relacionales obtiene un rendimiento cercano al de la combinación completa, 
+  lo que evidencia que la estructura de la red de citas aporta por sí sola 
+  un contexto semántico implícito relevante para la clasificación temática, 
+  sin necesidad de analizar el contenido textual de los artículos.
 \end{abstract}
 
 
 % Palabras claves
 \begin{IEEEkeywords}
-  Inteligencia Artificial, Minería de Grafos, Clasificación de Texto, Redes de Citas, Dataset Cora, Aprendizaje Supervisado.
+  Inteligencia Artificial, Minería de Grafos, Clasificación de Texto, Redes de Citas, Dataset Cora, Aprendizaje Supervisado, Análisis Relacional, Validación Cruzada, Hiperparámetros, F1-macro, Bag-of-Words, Centralidad, PageRank, Clustering, Detección de Comunidades.
 \end{IEEEkeywords}
 
 
 \section{Introducción}
 
-En esta sección se dedican varios párrafos para dar el contexto en el que se desarrolla el trabajo presentado. El aumento exponencial de manuscritos académicos publicados diariamente en repositorios abiertos hace que la indexación temática manual sea una tarea inviable en términos de tiempo y recursos. Tradicionalmente, el procesamiento de lenguaje natural (PLN) ha abordado este reto analizando los resúmenes o textos completos mediante vectores de frecuencias de términos. Sin embargo, este enfoque estático ignora una de las señales de información más ricas presentes en la literatura académica: el hipervínculo natural establecido mediante la red de referencias cruzadas y citas bibliográficas~\cite{b1}.
+El volumen de publicaciones científicas ha crecido de manera exponencial 
+en las últimas décadas, dificultando la organización y clasificación manual 
+de artículos por área temática. Tradicionalmente, el procesamiento de lenguaje natural (PLN) ha abordado este reto 
+analizando los resúmenes o textos completos mediante vectores de frecuencias de términos. Sin embargo, este enfoque estático ignora una de las señales de 
+información más ricas presentes en la literatura académica: el hipervínculo natural establecido mediante la red de referencias cruzadas y citas bibliográficas~\cite{yang2015network}.
 
-Después vienen un par de párrafos para dar un poco más de detalle sobre el trabajo realizado. El presente proyecto aborda directamente la clasificación multiclase de publicaciones científicas combinando dos dimensiones de características independientes. Por un lado, los atributos textuales binarios que capturan la presencia o ausencia de un vocabulario controlado; por otro lado, variables numéricas continuas y discretas que formalizan la importancia estructural del documento en su red de citación. Para ello, se emplea el clásico conjunto de datos analítico \emph{Cora Dataset}, el cual agrupa miles de publicaciones de ciencias de la computación dentro de siete categorías temáticas bien delimitadas. La solución se enfoca en someter los conjuntos de datos combinados y aislados a procesos exhaustivos de optimización de hiperparámetros mediante validación cruzada.
+El presente proyecto aborda directamente la 
+clasificación multiclase de publicaciones científicas combinando dos dimensiones de características independientes. Por un lado, los atributos 
+textuales binarios que capturan la presencia o ausencia de un vocabulario controlado; por otro lado, variables numéricas continuas y discretas que 
+formalizan la importancia estructural del documento en su red de citación. Para ello, se emplea el clásico conjunto de datos analítico \emph{Cora Dataset}, 
+el cual agrupa miles de publicaciones de ciencias de la computación dentro de siete categorías temáticas bien delimitadas~\cite{mccallum2024}. La solución se enfoca en someter 
+los conjuntos de datos combinados y aislados a procesos exhaustivos de optimización de hiperparámetros mediante validación cruzada.
 
-Finalmente, el último párrafo se dedica a comentar la estructura del documento por secciones, como el que sigue. La Sección~II expone los fundamentos matemáticos de las técnicas relacionales y los algoritmos clasificadores seleccionados; la Sección~III profundiza en el pipeline de ingeniería de características implantado y detalla la codificación lógica de datos; en la Sección~IV se desglosan los resultados empíricos y matrices comparativas de rendimiento; y finalmente, en la Sección~V se sintetizan las deducciones del estudio y se abren futuras líneas de investigación.
-
+El resto del documento se organiza de la siguiente manera: la 
+Sección~\ref{sec:preliminares} describe los fundamentos teóricos empleados; 
+la Sección~\ref{sec:metodologia} detalla la metodología seguida; 
+la Sección~\ref{sec:resultados} presenta los resultados 
+obtenidos; finalmente, la Sección~\ref{sec:conclusiones} recoge las 
+conclusiones del trabajo.
 
 \section{Preliminares}
+\label{sec:preliminares}
 
-En esta sección se hace una breve introducción de las técnicas empleadas y también trabajos relacionados, si los hay.
+En esta sección se describen los fundamentos teóricos sobre los que se 
+sustenta el trabajo, incluyendo los conceptos básicos de teoría de grafos 
+empleados y los algoritmos de aprendizaje automático utilizados.
 
-\subsection{Métodos empleados}
 
-Del dataset obtenemos dos tablas, 
+\subsection{Descripción del conjunto de datos}
+
+El dataset Cora~\cite{mccallum2024} está compuesto por dos ficheros:
+
 \begin{itemize}
-\item \textbf{cora.content}
-Contiene una tabla con el id del paper, 1433 columnas que representan una palabra, con un 1 si aparecen en el paper y un 0 si no (en realidad al hacer el dateset se eliminó toda palabra que apareciera menos de 10 veces, además de conectores textuales \cite{yang2015network}.) y la última columna representa la clase a la que pertenece el paper.
+\item \textbf{cora.content:}
+    contiene una tabla con el identificador 
+    de cada paper, 1433 atributos binarios que indican la presencia o 
+    ausencia de cada palabra del vocabulario en el paper, y la clase 
+    temática a la que pertenece. El vocabulario fue construido eliminando 
+    las palabras con frecuencia de documento inferior a 10 y los 
+    conectores textuales (\emph{stopwords})~\cite{mccallum2024}.
 
-\item \textbf{cora.cites}
-Contiene una tabla con el id del paper citado y el id del paper que lo cita.
+\item \textbf{cora.cites:}
+    contiene una tabla con el id del paper citado y el id del paper que lo cita.
 \end{itemize}
 
- A partir de estos datos modelamos el conjunto de papers como un grafo dirigido, donde cada vértice representa un paper y cada arista dirigida una cita. $G_d = (V, E_d)$ y un grafo no dirigido correspondiente $G = (V, E)$. 
-Hemos decidido usar el grafo no dirigido porque la mayoría de las propiedades topológicas analizadas dependen de la conectividad general y del volumen total de enlaces entre las publicaciones, sin que la orientación del flujo de citas altere la pertenencia a un núcleo temático. No obstante, se ha decidido conservar la naturaleza del grafo para calcular \texttt{pagerank}, porque de tal modo que el artículo $A$ cite al artículo $B$ otorga relevancia a $B$, pero no viceversa, y para 
- la detección de \texttt{comunidades}, porque los nichos se delimitan de manera mucho más precisa si se respeta la direccionalidad original.
+La \tablename~\ref{tab:cora} resume las principales características del dataset Cora utilizado en este trabajo. 
+El conjunto de datos contiene un total de 2708 publicaciones científicas conectadas mediante 5429 enlaces de citación. 
+
+\begin{table}[htbp]
+  \caption{Características principales del dataset Cora}
+  \label{tab:cora}
+  \centering
+  
+  \begin{tabular}{lc}
+    \toprule
+    Propiedad & Valor \\
+    \midrule
+    Número de papers & 2708 \\
+    Número de enlaces & 5429 \\
+    Número de clases & 7 \\
+    Tamaño del vocabulario & 1433 \\
+    Tipo de relaciones & Citaciones \\
+    Representación textual & Bag-of-Words binario \\
+    \bottomrule
+  \end{tabular}
+  
+\end{table}
+
+A partir de estos datos se modela el conjunto de papers como un grafo 
+dirigido $G_d = (V, E_d)$, donde cada vértice representa un paper y 
+cada arista dirigida una cita bibliográfica, y su correspondiente 
+versión no dirigida $G = (V, E)$.
+
+El grafo dirigido $G_d = (V, E_d)$ se emplea para el cálculo de todas 
+las métricas relacionales, ya que la orientación de las citas aporta 
+información relevante sobre el flujo de influencia entre publicaciones. 
+La única excepción es la detección de comunidades, para la cual se 
+utiliza el grafo no dirigido $G = (V, E)$, dado que el algoritmo de 
+modularidad codiciosa empleado requiere un grafo no dirigido y la 
+pertenencia a una comunidad no depende de la dirección de las citas 
+sino de la densidad de conexiones entre los nodos.
 
 
-Los métodos implementados se clasifican en los siguientes bloques fundamentales:
+\subsection{Métricas relacionales}
 
 \begin{itemize}
-\item \textbf{Métricas Relacionales de Centralidad:} Permiten cuantificar la relevancia de un nodo basado en sus enlaces. Se calculan las centralidades de grado entrante y saliente, la intermediación (\emph{betweenness}), la cercanía (\emph{closeness}) 
+\item \textbf{Métricas relacionales de centralidad:} Permiten cuantificar 
+la relevancia de un nodo basado en sus enlaces. Se calculan las 
+centralidades de grado entrante y saliente, la intermediación 
+(\emph{betweenness}), definida en la ecuación~\ref{eq:betweenness},
 \begin{equation}
-  \label{eq:ejemplo}
-  C_C(u) = \frac{|V_u| - 1}{|V| - 1} \frac{|V_u| - 1}{\sum_{v \in V_u} d(v, u)}
+  \label{eq:betweenness}
+  C_B(u) = \sum_{s \neq u \neq t} \frac{\sigma_{st}(u)}{\sigma_{st}}
 \end{equation}
-el prestigio a través del algoritmo PageRank, cuya probabilidad de transición e importancia estructural se define formalmente como
+donde $\sigma_{st}$ es el número total de caminos más cortos entre 
+los nodos $s$ y $t$, y $\sigma_{st}(u)$ es el número de dichos 
+caminos que pasan por $u$. La cercanía (\emph{closeness}), definida 
+en la ecuación~\ref{eq:closeness},
+\begin{equation}
+  \label{eq:closeness}
+  C_C(u) = \frac{|V_u| - 1}{|V| - 1} \cdot \frac{|V_u| - 1}{\sum_{v \in V_u} d(v, u)}
+\end{equation}
+donde $|V_u|$ es el número de nodos alcanzables desde $u$, $|V|$ es 
+el total de nodos del grafo y $d(v, u)$ es la distancia más corta 
+entre los nodos $v$ y $u$.
+
+Se calcula el prestigio a través del algoritmo \emph{PageRank}, cuya probabilidad de transición e importancia estructural se define formalmente como
 \begin{equation}
   \label{eq:pagerank}
   PR(u) = \frac{1-\alpha}{|V|} + \alpha \sum_{v \in B_u} \frac{PR(v)}{L(v)}
 \end{equation}
-donde $\alpha$ representa el factor de amortiguación (fijado en $0.85$), $B_u$ es el conjunto de nodos que apuntan a $u$, y $L(v)$ es el grado de salida del nodo $v$. Asimismo, el grado de cohesión vecinal se cuantifica mediante el coeficiente de clustering local
+donde $\alpha$ representa el factor de amortiguación (fijado en $0.85$), $B_u$ es el conjunto de nodos que apuntan a $u$, y $L(v)$ es el grado de salida del nodo $v$. Asimismo, el grado de cohesión vecinal se cuantifica mediante el coeficiente de \emph{clustering} local
 \begin{equation}
   \label{eq:clustering}
   C(u) = \frac{2 \, |\{ (v, w) \in E : v, w \in N_u \}|}{k_u (k_u - 1)}
 \end{equation}
 donde $N_u$ representa el conjunto de vecinos inmediatos del nodo $u$ y $k_u$ denota su grado total, midiendo la proporción de aristas existentes entre sus vecinos respecto al total de conexiones posibles.
-\item \textbf{Detección de Comunidades:} Agrupamiento no supervisado basado en la densidad de conexiones internas, empleando la optimización de la modularidad codiciosa (\emph{Greedy Modularity}).
-\item \textbf{Algoritmos de Clasificación Supervisada:} Implementación de los clasificadores optimizados mediante búsquedas en rejilla (\emph{GridSearchCV}).
+
+\item \textbf{Detección de comunidades:} Agrupamiento no supervisado basado en la densidad de conexiones internas, empleando la optimización de la modularidad codiciosa (\emph{Greedy Modularity}).
 \end{itemize}
+
+\subsection{Algoritmos de aprendizaje automático}
+
+Los modelos de clasificación supervisada empleados en este trabajo 
+han sido implementados mediante la biblioteca \emph{scikit-learn} 
+de Python. Para cada modelo se ha realizado una búsqueda en rejilla 
+(\emph{GridSearchCV}) con validación cruzada de 10 pliegues para 
+seleccionar los hiperparámetros óptimos, usando el F1 macro como 
+métrica de evaluación.
+
+La búsqueda en rejilla evalúa de forma exhaustiva todas las 
+combinaciones posibles de un conjunto de valores candidatos para 
+cada hiperparámetro. Para estimar el rendimiento de cada combinación, se emplea validación cruzada de $k$ pliegues: el 
+conjunto de entrenamiento se divide en $k$ subconjuntos de igual 
+tamaño, el modelo se entrena sobre $k-1$ de ellos y se evalúa sobre 
+el restante, rotando la partición de validación $k$ veces. La 
+puntuación final de cada combinación es la media de las $k$ 
+evaluaciones. En este trabajo se fija $k = 10$.
+
+Como métrica de evaluación se emplea el F1-macro, definido como la 
+media aritmética del F1 de cada clase:
+\begin{equation}
+  \label{eq:f1macro}
+  F1\text{-macro} = \frac{1}{|\mathcal{C}|} \sum_{c \in \mathcal{C}} 
+  \frac{2 \cdot P_c \cdot R_c}{P_c + R_c}
+\end{equation}
+donde $\mathcal{C}$ es el conjunto de clases, $P_c$ y $R_c$ son la 
+precisión y la exhaustividad de la clase $c$, 
+respectivamente. Al promediar sin ponderar por el tamaño de cada 
+clase, el F1-macro penaliza por igual los errores en clases 
+minoritarias y mayoritarias, lo que lo hace especialmente adecuado 
+para conjuntos de datos como Cora, donde las siete 
+clases no están representadas en igual proporción.
+
+
+\begin{itemize}
+    \item \textbf{Árbol de decisión (CART):} modelo que aprende reglas 
+    de clasificación jerárquicas particionando recursivamente el espacio 
+    de \emph{features}. Los hiperparámetros optimizados han sido la 
+    profundidad máxima del árbol (\texttt{max\_depth}), con valores 
+    entre 3 y 10, y el número mínimo de ejemplos en un nodo hoja 
+    (\texttt{min\_samples\_leaf}), con valores 5, 10 y 15.
+
+    \item \textbf{$k$ vecinos más cercanos ($k$NN):} clasifica cada 
+    ejemplo según la clase mayoritaria entre sus $k$ ejemplos más 
+    cercanos en el espacio de \emph{features}. Requiere normalización 
+    previa de los atributos mediante \texttt{MinMaxScaler} para evitar 
+    que ninguna \emph{feature} domine sobre las demás. Los 
+    hiperparámetros optimizados han sido el número de vecinos 
+    (\texttt{n\_neighbors}) y la métrica de distancia 
+    (\texttt{metric}).
+
+    \item \textbf{Naive Bayes categórico:} modelo probabilístico que 
+    asume independencia entre los atributos dado el valor de la clase. 
+    Requiere discretización previa de los atributos continuos mediante 
+    \texttt{KBinsDiscretizer}. Los hiperparámetros optimizados han sido 
+    el número de intervalos de discretización (\texttt{n\_bins}) y el 
+    parámetro de suavizado de Laplace (\texttt{alpha}).
+\end{itemize}
+
+Para evitar la fuga de datos (\emph{data leakage}) durante la búsqueda 
+en rejilla, los modelos que requieren preprocesamiento previo, 
+concretamente $k$NN (normalización mediante \texttt{MinMaxScaler}) 
+y Naive Bayes (discretización mediante \texttt{KBinsDiscretizer}), han sido 
+encapsulados en una tubería (\texttt{Pipeline}), de forma que el 
+preprocesador se ajusta únicamente sobre los datos de entrenamiento 
+de cada pliegue y se aplica posteriormente sobre los datos de 
+validación.
 
 \subsection{Trabajo Relacionado}
 
- El análisis predictivo sobre el dataset Cora constituye un campo de pruebas estándar dentro del aprendizaje de máquinas en grafos. Los estudios pioneros se limitaban al uso de clasificadores de contenido textual lineal, evolucionando rápidamente hacia marcos híbridos que emplean caminatas aleatorias o algoritmos de propagación de etiquetas (\emph{Label Propagation})~\cite{b3}. En la actualidad, aunque las Redes Convolucionales de Grafos (GCN) lideran los rankings de precisión, el análisis pormenorizado mediante ingeniería de características explícitas sigue siendo crítico para garantizar la explicabilidad.
+El dataset Cora constituye un banco de pruebas estándar en el campo 
+del aprendizaje automático sobre grafos~\cite{mccallum2024}. Los 
+enfoques iniciales se basaban exclusivamente en la representación 
+textual de los artículos mediante \emph{bag-of-words}, sin explotar 
+la estructura de la red de citas. Posteriormente se desarrollaron 
+métodos de aprendizaje de representaciones latentes en baja dimensión como 
+\emph{Node2Vec}~\cite{grover2016node2vec} y las Redes 
+Neuronales de Grafos (GNN)~\cite{wu2022graph}. 
 
+Estos métodos han demostrado obtener resultados superiores en tareas de clasificación de nodos y 
+predicción de enlaces. Sin embargo, presentan ciertas limitaciones prácticas. En primer lugar, los 
+\emph{embeddings} generados por técnicas como \emph{Node2Vec} poseen una interpretabilidad reducida, ya que cada dimensión 
+carece de significado semántico explícito. Por otro lado, las GNN requieren una mayor complejidad computacional 
+y un proceso de entrenamiento más costoso, especialmente en grafos de gran tamaño.
+
+A diferencia de estos enfoques, en este trabajo se opta por la 
+construcción manual de \emph{features} relacionales explícitas. Este enfoque, 
+aunque menos preciso, ofrece una mayor interpretabilidad 
+al permitir analizar directamente la contribución de cada métrica 
+a la clasificación, siendo además más adecuado para datasets de 
+tamaño moderado como Cora.
 
 \section{Metodología}
+\label{sec:metodologia}
 
-En primer lugar, partiendo de los dos archivos : \texttt{cora.content}  y \texttt{cora.cites} se construye el grafo  con la librería \texttt{networkx}, y como se ha explicado anteriormente se convierte en un grafo no dirigido.
+La \figurename~\ref{fig:pipeline} resume el flujo completo seguido en el proceso experimental, 
+desde la construcción del grafo de citas hasta la evaluación final de los modelos de clasificación.
+
+
+\begin{figure}[htbp]
+\centering
+
+\begin{tikzpicture}[
+node distance=1.2cm,
+every node/.style={
+rectangle,
+rounded corners,
+draw=black,
+align=center,
+minimum width=4cm,
+minimum height=0.8cm
+},
+arrow/.style={
+thick,
+->,
+>=stealth
+}
+]
+
+\node (data) {Carga de datos\ \texttt{cora.content} + \texttt{cora.cites}};
+\node (graph) [below of=data] {Construcción del grafo de citas};
+\node (metrics) [below of=graph] {Extracción de métricas relacionales};
+\node (selection) [below of=metrics] {Selección de \emph{features}};
+\node (models) [below of=selection] {Entrenamiento y optimización de modelos};
+\node (evaluation) [below of=models] {Evaluación mediante F1-macro};
+
+\draw [arrow] (data) -- (graph);
+\draw [arrow] (graph) -- (metrics);
+\draw [arrow] (metrics) -- (selection);
+\draw [arrow] (selection) -- (models);
+\draw [arrow] (models) -- (evaluation);
+
+\end{tikzpicture}
+
+\caption{Pipeline general del proceso experimental.}
+\label{fig:pipeline}
+\end{figure}
+
+
+En primer lugar, partiendo de los dos archivos \texttt{cora.content}  y \texttt{cora.cites}, se construye el grafo dirigido de citas bibliográficas
+$G_d = (V, E_d)$ con la librería \texttt{networkx}. Dado que el algoritmo de detección de comunidades requiere un grafo no dirigido, se construye también su 
+orrespondiente versión no dirigida $G = (V, E)$.
 \\
-Posteriormente calculamos los atributos \texttt{centralidad-grado-in, centralidad-grado-out, centralidad-intermediacion, centralidad-cercania, pagerank, clustering y comunidad} como candidatos a ser las métricas relacionales que estaremos estudiando.
+Posteriormente se calculan los atributos \texttt{centralidad-grado-in, centralidad-grado-out, centralidad-intermediacion, centralidad-cercania, pagerank, clustering y comunidad}
+como candidatos a métricas relacionales que se incluirán en el modelo de clasificación.
 \\
-Determinamos si una métrica es útil:
+Se determina si una métrica es útil mediante un análisis de comprobación de las métricas relacionales, que incluye los siguientes pasos:
+
 \begin{enumerate}
-\item \textit{Distribución de méticas por clase \figurename~\ref{fig:distrMetricas}:}  los papers de distintas clases deberán tener valores distintos en esa métrica.
+\item \textit{Distribución de métricas por clase:}  Para que una métrica 
+  sea útil como predictor, los papers de distintas clases deben presentar 
+  distribuciones estadísticamente distintas en dicha métrica. Las 
+  figuras~\ref{fig:distrMetricas1} y~\ref{fig:distrMetricas2} muestran 
+  los diagramas de caja (\emph{boxplots}) de cada métrica desglosados por 
+  clase temática (etiquetas 0--6).
+
+  En la \figurename~\ref{fig:distrMetricas1} se observa que tanto 
+  \texttt{centralidad\_grado\_in} como \texttt{centralidad\_intermediacion} 
+  y \texttt{centralidad\_cercania} presentan medianas prácticamente nulas en todas las clases, con una dispersión que se concentra 
+  en valores atípicos aislados. Este patrón indica que la 
+  gran mayoría de los nodos del grafo de citas tienen valores muy bajos en 
+  estas métricas independientemente de su clase temática, lo que propone 
+  una escasa capacidad discriminativa. Por el contrario, 
+  \texttt{centralidad\_grado\_out} muestra una distribución más uniforme 
+  entre clases, con medianas similares pero rangos más 
+  amplios y diferencias apreciables en la clase~4, cuya caja presenta 
+  mayor extensión superior, sugiriendo que los papers de esa categoría 
+  tienden a citar un mayor número de referencias.
+
+  En la \figurename~\ref{fig:distrMetricas2}, \texttt{pagerank} presenta 
+  un comportamiento similar al del grado entrante: medianas cercanas a cero 
+  y \emph{outliers} dispersos sin patrón claro por clase, lo que refleja que la 
+  influencia global calculada por \emph{PageRank} no está correlacionada con la 
+  temática del paper. La métrica \texttt{clustering} muestra medianas bajas 
+  pero con mayor variabilidad entre clases. Finalmente, 
+  \texttt{comunidad} es la métrica con mayor poder discriminativo visual: 
+  los rangos y las medianas difieren claramente entre 
+  clases, siendo la clase~2 la que presenta la mayor dispersión y los 
+  valores más elevados.
 
 \begin{figure}[htbp]
   \centering
   
-  \includegraphics[width=0.45\textwidth]{dist-metricas-clase}
-  \caption{Distribución de métricas por clase.}
-  \label{fig:distrMetricas}
+  \includegraphics[width=0.50\textwidth]{dist-metricas-clase-1}
+  \caption{Distribución de métricas por clase: centralidad de grado entrante, saliente, de intermediación y de cercanía.}
+  \label{fig:distrMetricas1}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  
+  \includegraphics[width=0.50\textwidth]{dist-metricas-clase-2}
+  \caption{Distribución de métricas por clase: pagerank, clustering y comunidad.}
+  \label{fig:distrMetricas2}
 \end{figure}
 
 
-\item\textit{Test de Kruskall-Wallis \tablename~\ref{tab:kruskall}:} El resultado produce un estadístico de prueba (llamado \(H\)) junto con un valor p (p-value) . \(p < 0.05\) determina que existen diferencias estadisticamente significativas entre, al menos, un par de grupos.
+\item\textit{Test de Kruskal-Wallis \tablename~\ref{tab:kruskall}:} La inspección visual de los \emph{boxplots} permite una primera visión,
+  pero no es suficiente para determinar si las diferencias 
+  observadas entre clases son estadísticamente significativas. Para formalizarlo se aplica el test de 
+  Kruskal-Wallis~\cite{kruskal1952}. Este test no paramétrico evalúa si las muestras de varias clases provienen de la misma distribución, sin asumir normalidad ni homogeneidad de varianzas.
+  El resultado produce un estadístico de prueba (llamado \(H\)) junto con un valor p (p-value). 
+  Un valor \(p < 0.05\) determina que 
+  existen diferencias estadísticamente significativas entre, al menos, 
+  un par de grupos, lo que indica que la métrica tiene capacidad 
+  discriminativa respecto a la clase temática y por tanto es útil 
+  como \emph{feature} predictiva.
+  Por el contrario, las métricas con \(p \geq 0.05\) no presentan 
+  diferencias significativas entre clases, lo que sugiere que sus 
+  valores se distribuyen de forma similar independientemente de la 
+  clase del paper. En consecuencia, se descartan 
+  \texttt{centralidad\_grado\_in} ($p = 0.3751$), 
+  \texttt{centralidad\_intermediacion} ($p = 0.1293$), 
+  \texttt{centralidad\_cercania} ($p = 0.1006$) y 
+  \texttt{pagerank} ($p = 0.3284$), ya que incluirlas no aportaría 
+  información discriminativa al modelo y podría introducir ruido 
+  en el proceso de aprendizaje.
 
 \begin{table}[htbp]
-  \caption{Test de Kruskall-Wallis para métricas pre-seleccionadas}
+  \caption{Test de Kruskal-Wallis para métricas pre-seleccionadas}
   \label{tab:kruskall}
   \centering
   \begin{tabular}{lccc}
@@ -173,101 +452,177 @@ Determinamos si una métrica es útil:
   \end{tabular}
 \end{table}
 
- \item\textit{Correlación entre métricas \figurename~\ref{fig:corrleacionMetricas}:} Si la correlación entre dos atributos es muy alta (su valor absoluto es cercano a uno) podemos determinar que están midiendo lo mismo, pudiendo así eliminar uno de ellos.
+ \item\textit{Correlación entre métricas \figurename~\ref{fig:corrleacionMetricas}:} Una vez descartadas las 
+  métricas sin capacidad discriminativa, se analiza la redundancia entre 
+  las tres métricas seleccionadas para evitar que el clasificador reciba 
+  información duplicada.
+  Si la correlación entre dos atributos es muy alta 
+  (su valor absoluto es cercano a uno), puede considerarse que ambas métricas están capturando información similar o redundante. En estos casos, es 
+  posible eliminar una de ellas para evitar redundancia en el análisis.
+
+  Para estudiar esta relación se ha utilizado la correlación de Spearman~\cite{spearman1904}. La correlación de Spearman se basa en los rangos de los valores en lugar de 
+  los valores originales, lo que permite medir relaciones monótonas entre variables, incluso cuando estas no siguen una relación lineal. 
+
+  La matriz de correlación se representa como un mapa de calor en la 
+  \figurename~\ref{fig:corrleacionMetricas}. Las tres métricas que 
+  superaron el test de Kruskal-Wallis (\texttt{centralidad\_grado\_out}, 
+  \texttt{clustering} y \texttt{comunidad}) presentan correlaciones bajas 
+  entre sí, lo que confirma que cada métrica aporta una perspectiva distinta sobre 
+  la posición del paper en la red de citas: cuánto cita a otros, cómo 
+  de interconectados están sus vecinos, y a qué grupo temático implícito 
+  pertenece según la estructura de la red.
 
 \begin{figure}[htbp]
   \centering
   
-  \includegraphics[width=0.45\textwidth]{Correlación entre métricas}
+  \includegraphics[width=0.50\textwidth]{Correlación entre métricas}
   \caption{Correlación entre métricas relacionales.}
   \label{fig:corrleacionMetricas}
 \end{figure}
 
 \end{enumerate}
 
-Tras estas comprobaciones, nos quedamos con \texttt{centralidad-grado-out, clustering y comunidad} 
+El conjunto de datos se divide en un 80\% para entrenamiento y un 20\% 
+para prueba, resultando en \texttt{2166} muestras de entrenamiento y 
+\texttt{542} muestras de prueba. Esta misma partición, fijada con 
+\texttt{random\_state=42}, se reutiliza en los tres experimentos para 
+garantizar que los resultados sean directamente comparables.
 
-Ahora dividimos el conjunto en un 20\% para test el 80\% restante para entrenar los modelos, quedándonos con \texttt{2166} muestras de entrenamiento y \texttt{542} muestras de prueba.
+Con el fin de evaluar la contribución independiente y combinada de cada 
+tipo de información, se definen tres conjuntos de \emph{features}:
 
-Finalmente ejecutamos una búsqueda en rejilla, descrita en \figurename~\ref{pcd:rejilla} para cada modelo (como los resultados dependen de los hiperparámetros, estos últimos estarán definidos en el apartado de resultados).
+\begin{itemize}
+    \item \textbf{Métricas relacionales + BoW:} combinación de las tres 
+    métricas seleccionadas (\texttt{centralidad\_grado\_out}, 
+    \texttt{clustering}, \texttt{comunidad}) con los 1433 atributos 
+    binarios de la bolsa de palabras.
+    \item \textbf{Solo BoW:} únicamente los 1433 atributos textuales, 
+    sin ninguna información relacional.
+    \item \textbf{Solo métricas relacionales:} únicamente las tres 
+    métricas relacionales, sin ninguna información textual.
+\end{itemize}
 
-\begin{figure}[htbp]
-\footnotesize %
-  \begin{pseudo}*
-    \hd{\fn{busqueda\_en\_rejilla\_simple}}(X_{ent}, y_{ent}, X_{val}, y_{val}, \textnormal{rejilla}) \\*
-    \multicolumn{2}{l}{\textbf{Entrada}: \parbox{0.38\textwidth}{Matrices de entrenamiento y validación con sus respectivos vectores objetivo.}} \\*
-    \multicolumn{2}{l}{\textbf{Salida}: \parbox{0.38\textwidth}{El estimador optimizado con el mejor rendimiento obtenido.}} \\\( \textnormal{mejor\_puntuacion} \leftarrow -\infty \) \\
-    \( p_{opt} \leftarrow \textnormal{nulo} \) \\
-    \textbf{para cada} combinación de parámetros \( p \) \textbf{en} \textnormal{rejilla} \textbf{hacer} \\+
-      Entrenar modelo con parámetros \( p \) usando \( X_{ent} \) y \( y_{ent} \) \\
-      \( \textnormal{puntuacion} \leftarrow \textnormal{evaluar modelo en } X_{val} \textnormal{ e } y_{val} \) \\
-      \textbf{si} \( \textnormal{puntuacion} > \textnormal{mejor\_puntuacion} \) \textbf{entonces} \\+
-        \( \textnormal{mejor\_puntuacion} \leftarrow \textnormal{puntuacion} \) \\
-        \( p_{opt} \leftarrow p \) \\--
-   Entrenar estimador final con \( p_{opt} \) sobre \( X \) e \( y \) \\ %
-    devolver estimador\_final
-  \end{pseudo}
-  \caption{Algoritmo general del pipeline de optimización GridSearch sin pliegues.}
-  \label{pcd:rejilla}
-\end{figure}
+Sobre cada uno de estos conjuntos se entrena y optimiza cada clasificador 
+mediante \texttt{GridSearchCV} con validación cruzada de 10 pliegues y 
+F1-macro como métrica de evaluación. Los espacios de búsqueda de 
+hiperparámetros son los mismos en los tres experimentos para cada 
+clasificador, de modo que las diferencias en los hiperparámetros óptimos 
+resultantes reflejan la adaptación de cada modelo a la naturaleza del 
+conjunto de \emph{features} empleado.
 
 
 \section{Resultados}
+\label{sec:resultados}
 
-Ahora detallaremos las pruebas realizadas, los datos y los resultados obtenidos:
-\begin{itemize}
-\item Los experimentos realizados dividieron los datos en un 80\% para entrenamiento y un 20\% para pruebas. Se configuró una búsqueda \texttt{GridSearchCV} para calibrar los parámetros clave de cada clasificador \\ 
-
-\begin{enumerate}
-\item \textbf{K-Nearest Neighbors (kNN):}
-  \begin{itemize}
-  \item Número de vecinos evaluados: $[1, 3, 5, 7, 9, 11, 13, 15]$.
-  \item Funciones de distancia: Euclídea y Manhattan.
-  \end{itemize}
-
-\item \textbf{Árbol de Clasificación:}
-  \begin{itemize}
-  \item Profundidades máximas (\texttt{max\_depth}): Rango $[3, 11)$ (valores enteros del $3$ al $10$).
-  \item Mínimo de muestras por hoja (\texttt{min\_samples\_leaf}): $[5, 10, 15]$.
-  \end{itemize}
-
-\item \textbf{Naive Bayes:}
-  \begin{itemize}
-  \item Parámetro de suavizado de Laplace (\texttt{alpha}): Rango $[1, 6)$ (valores enteros del $1$ al $5$).
-  \item Transformador de discretización no lineal \texttt{KBinsDiscretizer(encode='ordinal', strategy='quantile')}.
-  \end{itemize}
-\end{enumerate}
-
-
-\item Los resultados obtenidos se evaluaron utilizando la puntuación F1-macro para gestionar de manera justa el desbalance de clases nativo del conjunto Cora.
-\item Análisis de los resultados: Para los 3 conjuntos de datos el modelo que mejor rendimiento ha obtenido ha sido el Árbol de decisión CART, con un F1-macro de 0,72 en el conjunto que incluye tanto las métricas relacionales como la bolsa de palabras. \\ 
-La búsqueda en rejilla ha determinado que para este caso los mejores hiperparámetros son \texttt{max-depth= 9} y  \texttt{min-samples-leaf = 5}.
-\end{itemize}
-
+La \tablename~\ref{tab:resultados} recoge los valores de F1-macro 
+obtenidos sobre el conjunto de prueba para cada combinación de 
+modelo y conjunto de \emph{features}. Los hiperparámetros óptimos 
+seleccionados por la búsqueda en rejilla para cada experimento se 
+detallan en la \tablename~\ref{tab:hiperparametros}.
 
 \begin{table}[htbp]
-  \caption{Resultados Comparativos de Rendimiento para cada conjunto}
-  \label{tab:ejemplo}
+  \caption{F1-macro en el conjunto de prueba para cada modelo y conjunto de features}
+  \label{tab:resultados}
   \centering
   \begin{tabular}{lccc}
     \toprule
-    Modelo Evaluado & Datos Totales & Solo BoW & Solo Relacionales \\
+    Modelo & Relacional + BoW & Solo BoW & Solo Relacional \\
     \midrule
-    CART		& \texttt{0,720} & \texttt{0,572} & \texttt{0,698} \\
-    K-Nearest Neighbors & \texttt{0,414} & \texttt{0,413} & \texttt{0,514} \\
-    Naive Bayes         & \texttt{0,388} & \texttt{0,066} & \texttt{0,388} \\
-    
+    CART            & 0{,}720 & 0{,}572 & 0{,}698 \\
+    kNN             & 0{,}414 & 0{,}413 & 0{,}514 \\
+    Naive Bayes     & 0{,}388 & 0{,}066 & 0{,}388 \\
     \bottomrule
   \end{tabular}
 \end{table}
 
+\begin{table}[htbp]
+  \caption{Hiperparámetros óptimos por modelo y conjunto de features}
+  \label{tab:hiperparametros}
+  \centering
+  \begin{tabular}{llp{4.5cm}}
+    \toprule
+    Modelo & Conjunto & Hiperparámetros óptimos \\
+    \midrule
+    \multirow{3}{*}{CART}
+      & Relacional + BoW & \texttt{max\_depth=9}, \texttt{min\_samples\_leaf=5} \\
+      & Solo BoW         & \texttt{max\_depth=10}, \texttt{min\_samples\_leaf=5} \\
+      & Solo Relacional  & \texttt{max\_depth=7}, \texttt{min\_samples\_leaf=10} \\
+    \midrule
+    \multirow{3}{*}{kNN}
+      & Relacional + BoW & \texttt{n\_neighbors=1}, \texttt{metric=manhattan} \\
+      & Solo BoW         & \texttt{n\_neighbors=1}, \texttt{metric=manhattan} \\
+      & Solo Relacional  & \texttt{n\_neighbors=1}, \texttt{metric=manhattan} \\
+    \midrule
+    \multirow{3}{*}{Naive Bayes}
+      & Relacional + BoW & \texttt{n\_bins=6}, \texttt{alpha=4} \\
+      & Solo BoW         & \texttt{n\_bins=3}, \texttt{alpha=1} \\
+      & Solo Relacional  & \texttt{n\_bins=6}, \texttt{alpha=4} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+El árbol de decisión CART es el modelo con mejor rendimiento en los tres conjuntos evaluados. 
+En la configuración completa (Relacional + BoW) alcanza un F1-macro de $0{,}720$, lo que supone una mejora de $0{,}148$ puntos respecto al 
+uso exclusivo de BoW y de tan solo $0{,}022$ puntos respecto al uso exclusivo de métricas relacionales. Este resultado es especialmente 
+relevante desde el punto de vista interpretativo, ya que indica que la información relacional derivada del grafo de citas aporta una señal 
+predictiva de gran calidad, incluso en ausencia de información textual.
+
+En particular, el hecho de que un conjunto reducido de únicamente tres \emph{features} 
+topológicas consiga un rendimiento tan próximo al obtenido con 1433 atributos basados en bolsa de palabras sugiere que la 
+estructura de la red de citas no solo complementa la información textual, sino que en cierta medida la resume. Esto se explica por la 
+naturaleza del propio proceso de citación, en el que los artículos tienden a enlazar trabajos de su misma área temática, generando 
+comunidades densamente conectadas que reflejan relaciones semánticas implícitas.
+
+El kNN obtiene su mejor rendimiento utilizando exclusivamente métricas relacionales ($0{,}514$), superando incluso la configuración 
+que combina ambas fuentes de información ($0{,}414$). Este comportamiento puede explicarse por la naturaleza del espacio de alta 
+dimensionalidad inducido por la representación BoW. Al incorporar 1433 atributos binarios adicionales, el espacio de características se 
+vuelve disperso, reduciendo la capacidad del modelo para identificar vecinos verdaderamente relevantes al dejar de ser informativas las distancias.
+
+Este efecto se ve reforzado por el hecho de que el valor óptimo de $k=1$ se mantiene constante en los tres experimentos, 
+lo que sugiere que el modelo no logra capturar estructuras locales robustas en el espacio de características y tiende a depender de 
+ejemplos individuales muy cercanos, mostrando un comportamiento cercano a la memorización.
+
+Naive Bayes presenta el comportamiento más inestable de los modelos evaluados. Su rendimiento con solo BoW ($0{,}066$) 
+es prácticamente equivalente a una clasificación aleatoria en un problema de siete clases.
+
+En contraste, cuando se emplean únicamente métricas relacionales, el rendimiento aumenta hasta $0{,}388$, lo que sugiere que 
+la discretización de variables continuas mediante \texttt{KBinsDiscretizer} permite al modelo capturar parcialmente patrones estructurales más estables. 
+Sin embargo, la combinación de ambas fuentes de información no produce una mejora significativa, lo que refuerza la idea de que Naive Bayes es especialmente 
+sensible a la heterogeneidad y escala de los atributos de entrada.
+
 
 \section{Conclusiones}
+\label{sec:conclusiones}
 
-Finalmente, se dedica la última sección para indicar las conclusiones obtenidas del trabajo. La inclusión de variables topológicas aporta información complementaria valiosa, aunque su impacto final está condicionado por la naturaleza matemática del clasificador y la escala de las características continuas. 
+Este trabajo ha evaluado el impacto de integrar métricas relacionales 
+derivadas de la red de citas bibliográficas en la clasificación 
+temática de artículos científicos del dataset Cora. Los resultados 
+muestran que el árbol de decisión CART es el modelo más adecuado 
+para este problema, alcanzando un F1-macro de $0{,}720$ en la 
+configuración completa. El hallazgo más relevante es que el uso 
+exclusivo de las tres métricas topológicas seleccionadas 
+(\texttt{centralidad\_grado\_out}, \texttt{clustering} y 
+\texttt{comunidad}) obtiene un F1-macro de $0{,}698$, apenas 
+$0{,}022$ puntos por debajo de la combinación completa y $0{,}126$ 
+puntos por encima del uso exclusivo de BoW. Esto evidencia que la 
+estructura de la red de citas encierra por sí sola una señal 
+temática implícita de alta densidad informativa, sin necesidad de 
+analizar el contenido textual de los artículos.
 
-Se suele dedicar un párrafo final con ideas de mejora y trabajo futuro. Como líneas de desarrollo futuro, se plantea la incorporación de esquemas de pesado TF-IDF, la normalización avanzada de las métricas estructurales mediante técnicas de escalado, o la exploración de modelos basados en ensamblados como XGBoost para optimizar las fronteras de decisión mixtas.
+No todos los modelos se benefician por igual de la combinación de 
+ambas fuentes de información. El kNN ve degradado su rendimiento 
+al incorporar las 1433 dimensiones de BoW, mientras que Naive Bayes colapsa con BoW en 
+solitario por la inadecuación de la discretización sobre atributos 
+binarios. Estos resultados subrayan que la elección del clasificador 
+es tan determinante como la selección de \emph{features}.
 
+Como líneas de trabajo futuro se plantea la incorporación de esquemas 
+de ponderación TF-IDF en lugar de la representación binaria actual, 
+la aplicación de técnicas de escalado a las métricas estructurales 
+para mejorar el rendimiento de modelos sensibles a la escala como 
+kNN, y la exploración de modelos de ensamblado como Random Forest o 
+XGBoost, que podrían explotar mejor la heterogeneidad entre los 
+atributos textuales y topológicos.
 
 \begin{thebibliography}{00}
 \bibitem{yang2015network}
@@ -275,8 +630,23 @@ C.~Yang, Z.~Liu, D.~Zhao, M.~Sun, y E.~Y. Chang,
 ``Network Representation Learning with Rich Text Information,'' 
 en \emph{Proceedings of the 24th International Joint Conference on Artificial Intelligence (IJCAI)}, 
 2015, pp. 2111--2117.
-\bibitem{b2} L. Page, S. Brin, R. Motwani, and T. Winograd, ``The PageRank citation ranking: Bringing order to the web,'' Stanford InfoLab, Tech. Rep., 1999.
-\bibitem{b3} M. Sen, G. Namata, M. Bilgic, L. Getoor, B. Gallagher, and T. Eliassi-Rad, ``Collective classification in network data,'' AI Magazine, vol. 29, no. 3, pp. 93--106, 2008.
+\bibitem{mccallum2024} Andrew McCallum, ``Cora,'' \emph{IEEE Dataport}, March 11, 2024, doi: 10.21227/jsg4-wp31.
+\bibitem{grover2016node2vec}
+A. Grover and J. Leskovec, ``node2vec: Scalable feature learning for 
+networks,'' in \emph{Proc. 22nd ACM SIGKDD Int. Conf. Knowledge 
+Discovery and Data Mining}, 2016.
+\bibitem{wu2022graph}
+L. Wu, P. Cui, J. Pei, and L. Zhao, \emph{Graph Neural Networks: 
+Foundations, Frontiers, and Applications}. Springer Singapore, 2022.
+\bibitem{kruskal1952}
+W.~H. Kruskal and W.~A. Wallis, ``Use of ranks in one-criterion 
+variance analysis,'' \emph{Journal of the American Statistical 
+Association}, vol.~47, no.~260, pp.~583--621, 1952.
+\bibitem{spearman1904}
+C.~Spearman, ``The proof and measurement of association between 
+two things,'' \emph{The American Journal of Psychology}, vol.~15, 
+no.~1, pp.~72--101, 1904.
+
 \end{thebibliography}
 
 \end{document}
