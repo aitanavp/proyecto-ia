@@ -87,7 +87,7 @@
 
 % Palabras claves
 \begin{IEEEkeywords}
-  Inteligencia Artificial, Minería de Grafos, Clasificación de Texto, Redes de Citas, Dataset Cora, Aprendizaje Supervisado, Análisis Relacional, Validación Cruzada, Hiperparámetros, F1-macro, Bag-of-Words, Centralidad, PageRank, Clustering, Detección de Comunidades.
+  Inteligencia Artificial, Minería de Grafos, Clasificación de Texto, Redes de Citas, Dataset Cora, Aprendizaje Supervisado, Análisis Relacional.
 \end{IEEEkeywords}
 
 
@@ -204,7 +204,7 @@ Se calcula el prestigio a través del algoritmo \emph{PageRank}, cuya probabilid
   \label{eq:pagerank}
   PR(u) = \frac{1-\alpha}{|V|} + \alpha \sum_{v \in B_u} \frac{PR(v)}{L(v)}
 \end{equation}
-donde $\alpha$ representa el factor de amortiguación (fijado en $0.85$), $B_u$ es el conjunto de nodos que apuntan a $u$, y $L(v)$ es el grado de salida del nodo $v$. Asimismo, el grado de cohesión vecinal se cuantifica mediante el coeficiente de \emph{clustering} local
+donde $\alpha$ representa el factor de amortiguación (fijado en $0{,}85$), $B_u$ es el conjunto de nodos que apuntan a $u$, y $L(v)$ es el grado de salida del nodo $v$. Asimismo, el grado de cohesión vecinal se cuantifica mediante el coeficiente de \emph{clustering} local
 \begin{equation}
   \label{eq:clustering}
   C(u) = \frac{2 \, |\{ (v, w) \in E : v, w \in N_u \}|}{k_u (k_u - 1)}
@@ -355,7 +355,7 @@ thick,
 
 En primer lugar, partiendo de los dos archivos \texttt{cora.content}  y \texttt{cora.cites}, se construye el grafo dirigido de citas bibliográficas
 $G_d = (V, E_d)$ con la librería \texttt{networkx}. Dado que el algoritmo de detección de comunidades requiere un grafo no dirigido, se construye también su 
-orrespondiente versión no dirigida $G = (V, E)$.
+correspondiente versión no dirigida $G = (V, E)$.
 \\
 Posteriormente se calculan los atributos \texttt{centralidad-grado-in, centralidad-grado-out, centralidad-intermediacion, centralidad-cercania, pagerank, clustering y comunidad}
 como candidatos a métricas relacionales que se incluirán en el modelo de clasificación.
@@ -433,7 +433,7 @@ Se determina si una métrica es útil mediante un análisis de comprobación de 
   en el proceso de aprendizaje.
 
 \begin{table}[htbp]
-  \caption{Test de Kruskal-Wallis para métricas pre-seleccionadas}
+  \caption{Resultados del test de Kruskal-Wallis para las métricas candidatas}
   \label{tab:kruskall}
   \centering
   \begin{tabular}{lccc}
