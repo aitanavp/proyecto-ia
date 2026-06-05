@@ -416,19 +416,19 @@ Se determina si una métrica es útil mediante un análisis de comprobación de 
   observadas entre clases son estadísticamente significativas. Para formalizarlo se aplica el test de 
   Kruskal-Wallis~\cite{kruskal1952}. Este test no paramétrico evalúa si las muestras de varias clases provienen de la misma distribución, sin asumir normalidad ni homogeneidad de varianzas.
   El resultado produce un estadístico de prueba (llamado \(H\)) junto con un valor p (p-value). 
-  Un valor \(p < 0.05\) determina que 
+  Un valor \(p < 0,05\) determina que 
   existen diferencias estadísticamente significativas entre, al menos, 
   un par de grupos, lo que indica que la métrica tiene capacidad 
   discriminativa respecto a la clase temática y por tanto es útil 
   como \emph{feature} predictiva.
-  Por el contrario, las métricas con \(p \geq 0.05\) no presentan 
+  Por el contrario, las métricas con \(p \geq 0,05\) no presentan 
   diferencias significativas entre clases, lo que sugiere que sus 
   valores se distribuyen de forma similar independientemente de la 
   clase del paper. En consecuencia, se descartan 
-  \texttt{centralidad\_grado\_in} ($p = 0.3751$), 
-  \texttt{centralidad\_intermediacion} ($p = 0.1293$), 
-  \texttt{centralidad\_cercania} ($p = 0.1006$) y 
-  \texttt{pagerank} ($p = 0.3284$), ya que incluirlas no aportaría 
+  \texttt{centralidad\_grado\_in} ($p = 0{,}3751$), 
+  \texttt{centralidad\_intermediacion} ($p = 0,1293$), 
+  \texttt{centralidad\_cercania} ($p = 0,1006$) y 
+  \texttt{pagerank} ($p = 0,3284$), ya que incluirlas no aportaría 
   información discriminativa al modelo y podría introducir ruido 
   en el proceso de aprendizaje.
 
@@ -440,13 +440,13 @@ Se determina si una métrica es útil mediante un análisis de comprobación de 
     \toprule
     Métrica Evaluada & H & p-value & ¿Pasa el test? \\
     \midrule
-   \texttt{centralidad\_grado\_in}       & 6.45   & 0.3751 & No \\
-    \texttt{centralidad\_grado\_out}      & 38.92  & 0.0000 & Sí \\
-    \texttt{centralidad\_intermediacion}  & 9.89   & 0.1293 & No \\
-    \texttt{centralidad\_cercania}        & 10.63  & 0.1006 & No \\
-    \texttt{pagerank}                     & 6.92   & 0.3284 & No \\
-    \texttt{clustering}                   & 27.26  & 0.0001 & Sí \\
-    \texttt{comunidad}                    & 978.56 & 0.0000 & Sí \\
+   \texttt{centralidad\_grado\_in}       & 6,45   & 0,3751 & No \\
+    \texttt{centralidad\_grado\_out}      & 38,92  & 0,0000 & Sí \\
+    \texttt{centralidad\_intermediacion}  & 9,89   & 0,1293 & No \\
+    \texttt{centralidad\_cercania}        & 10,63  & 0,1006 & No \\
+    \texttt{pagerank}                     & 6,92   & 0,3284 & No \\
+    \texttt{clustering}                   & 27,26  & 0,0001 & Sí \\
+    \texttt{comunidad}                    & 978,56 & 0,0000 & Sí \\
     
     \bottomrule
   \end{tabular}
